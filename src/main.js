@@ -90,7 +90,6 @@ function analyzeSalesData(data, options) {
         const profit = calculateSimpleProfit(item, product);
 
         // Обновление статистики продавца
-        // acc.sellers[sellerId].revenue += calculateRevenue(item, product);
         acc.sellers[sellerId].profit += profit;
 
         const findedProduct = acc.sellers[sellerId].top_products.find(
