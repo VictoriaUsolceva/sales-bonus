@@ -34,11 +34,11 @@ function calculateSimpleProfit(item, product) {
  */
 function calculateBonusByProfit(index, total, seller) {
   if (index === 0) {
-    return +((seller.profit * 15) / 100).toFixed(2);
+    return Math.floor((seller.profit * 15)) / 100;
   } else if ([1, 2].includes(index)) {
-    return +((seller.profit * 10) / 100).toFixed(2);
-  } else if (index !== total) {
-    return +((seller.profit * 5) / 100).toFixed(2);
+    return Math.floor((seller.profit * 10)) / 100;
+  } else if (index !== (total - 1)) {
+    return Math.floor((seller.profit * 5)) / 100;
   } else {
     return 0;
   }
@@ -90,7 +90,7 @@ function analyzeSalesData(data, options) {
         const profit = calculateSimpleProfit(item, product);
 
         // Обновление статистики продавца
-        acc.sellers[sellerId].revenue += calculateRevenue(item, product);
+        // acc.sellers[sellerId].revenue += calculateRevenue(item, product);
         acc.sellers[sellerId].profit += profit;
 
         const findedProduct = acc.sellers[sellerId].top_products.find(
@@ -107,6 +107,8 @@ function analyzeSalesData(data, options) {
       });
 
       acc.sellers[sellerId].sales_count += 1;
+
+      acc.sellers[sellerId].revenue += +(record.total_amount - record.total_discount).toFixed(2);
 
       return acc;
     },
@@ -133,7 +135,7 @@ function analyzeSalesData(data, options) {
     .flatMap((i) => i[1]);
 
   sortedSellers.forEach((element, index) => {
-    element.bonus = calculateBonus(index, sortedSellers.length - 1, element);
+    element.bonus = calculateBonus(index, sortedSellers.length, element);
   });
 
   return sortedSellers;
