@@ -34,13 +34,13 @@ function calculateSimpleProfit(item, product) {
  */
 function calculateBonusByProfit(index, total, seller) {
   if (index === 0) {
-    seller.bonus = +((seller.profit * 15) / 100).toFixed(2);
+    return +((seller.profit * 15) / 100).toFixed(2);
   } else if ([1, 2].includes(index)) {
-    seller.bonus = +((seller.profit * 10) / 100).toFixed(2);
+    return +((seller.profit * 10) / 100).toFixed(2);
   } else if (index !== total) {
-    seller.bonus = +((seller.profit * 5) / 100).toFixed(2);
+    return +((seller.profit * 5) / 100).toFixed(2);
   } else {
-    seller.bonus = 0;
+    return 0;
   }
 }
 
@@ -51,7 +51,12 @@ function calculateBonusByProfit(index, total, seller) {
  * @returns {{revenue, top_products, bonus, name, sales_count, profit, seller_id}[]}
  */
 function analyzeSalesData(data, options) {
-  if (!data || !Array.isArray(data.sellers) || data.sellers.length === 0) {
+  if (
+    !data ||
+    !Array.isArray(data.sellers) ||
+    data.sellers.length === 0 ||
+    data.purchase_records.length === 0
+  ) {
     throw new Error("Некорректные входные данные");
   }
 
@@ -73,7 +78,7 @@ function analyzeSalesData(data, options) {
       if (!acc.sellers[sellerId])
         acc.sellers[sellerId] = {
           seller_id: sellerId,
-          name: seller.first_name,
+          name: `${seller.first_name} ${seller.last_name}`,
           revenue: 0,
           profit: 0,
           sales_count: 0,
@@ -88,10 +93,17 @@ function analyzeSalesData(data, options) {
         acc.sellers[sellerId].revenue += calculateRevenue(item, product);
         acc.sellers[sellerId].profit += profit;
 
-        acc.sellers[sellerId].top_products.push({
-          sku: item.sku,
-          quantity: item.quantity,
-        });
+        const findedProduct = acc.sellers[sellerId].top_products.find(
+          (product) => product.sku === item.sku
+        );
+        if (findedProduct) {
+          findedProduct.quantity += item.quantity;
+        } else {
+          acc.sellers[sellerId].top_products.push({
+            sku: item.sku,
+            quantity: item.quantity,
+          });
+        }
       });
 
       acc.sellers[sellerId].sales_count += 1;
@@ -121,7 +133,7 @@ function analyzeSalesData(data, options) {
     .flatMap((i) => i[1]);
 
   sortedSellers.forEach((element, index) => {
-    calculateBonus(index, sortedSellers.length - 1, element);
+    element.bonus = calculateBonus(index, sortedSellers.length - 1, element);
   });
 
   return sortedSellers;
